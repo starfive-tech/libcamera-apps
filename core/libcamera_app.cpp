@@ -247,23 +247,24 @@ void LibcameraApp::ConfigureViewfinder()
 	if (!configuration_)
 		throw std::runtime_error("failed to generate viewfinder configuration");
 
-	Size size(1280, 960);
-	auto area = camera_->properties().get(properties::PixelArrayActiveAreas);
+	//Size size(1280, 960);
+	Size size = configuration_->at(0).size;
+	//auto area = camera_->properties().get(properties::PixelArrayActiveAreas);
 	if (options_->viewfinder_width && options_->viewfinder_height)
 		size = Size(options_->viewfinder_width, options_->viewfinder_height);
-	else if (area)
-	{
-		// The idea here is that most sensors will have a 2x2 binned mode that
-		// we can pick up. If it doesn't, well, you can always specify the size
-		// you want exactly with the viewfinder_width/height options_->
-		size = (*area)[0].size() / 2;
-		// If width and height were given, we might be switching to capture
-		// afterwards - so try to match the field of view.
-		if (options_->width && options_->height)
-			size = size.boundedToAspectRatio(Size(options_->width, options_->height));
-		size.alignDownTo(2, 2); // YUV420 will want to be even
-		LOG(2, "Viewfinder size chosen is " << size.toString());
-	}
+	//else if (area)
+	//{
+	//	// The idea here is that most sensors will have a 2x2 binned mode that
+	//	// we can pick up. If it doesn't, well, you can always specify the size
+	//	// you want exactly with the viewfinder_width/height options_->
+	//	size = (*area)[0].size() / 2;
+	//	// If width and height were given, we might be switching to capture
+	//	// afterwards - so try to match the field of view.
+	//	if (options_->width && options_->height)
+	//		size = size.boundedToAspectRatio(Size(options_->width, options_->height));
+	//	size.alignDownTo(2, 2); // YUV420 will want to be even
+	//	LOG(2, "Viewfinder size chosen is " << size.toString());
+	//}
 
 	// Finally trim the image size to the largest that the preview can handle.
 	Size max_size;
@@ -275,7 +276,7 @@ void LibcameraApp::ConfigureViewfinder()
 	}
 
 	// Now we get to override any of the default settings from the options_->
-	configuration_->at(0).pixelFormat = libcamera::formats::YUV420;
+	//configuration_->at(0).pixelFormat = libcamera::formats::YUV420;
 	configuration_->at(0).size = size;
 	if (options_->viewfinder_buffer_count > 0)
 		configuration_->at(0).bufferCount = options_->viewfinder_buffer_count;
@@ -286,7 +287,7 @@ void LibcameraApp::ConfigureViewfinder()
 		lores_size.alignDownTo(2, 2);
 		if (lores_size.width > size.width || lores_size.height > size.height)
 			throw std::runtime_error("Low res image larger than viewfinder");
-		configuration_->at(lores_stream_num).pixelFormat = libcamera::formats::YUV420;
+		//configuration_->at(lores_stream_num).pixelFormat = libcamera::formats::YUV420;
 		configuration_->at(lores_stream_num).size = lores_size;
 		configuration_->at(lores_stream_num).bufferCount = configuration_->at(0).bufferCount;
 	}
@@ -297,7 +298,7 @@ void LibcameraApp::ConfigureViewfinder()
 	if (have_raw_stream)
 	{
 		configuration_->at(raw_stream_num).size = options_->viewfinder_mode.Size();
-		configuration_->at(raw_stream_num).pixelFormat = mode_to_pixel_format(options_->viewfinder_mode);
+		//configuration_->at(raw_stream_num).pixelFormat = mode_to_pixel_format(options_->viewfinder_mode);
 		configuration_->at(raw_stream_num).bufferCount = configuration_->at(0).bufferCount;
 	}
 
@@ -335,8 +336,9 @@ void LibcameraApp::ConfigureStill(unsigned int flags)
 		configuration_->at(0).pixelFormat = libcamera::formats::BGR888;
 	else if (flags & FLAG_STILL_RGB)
 		configuration_->at(0).pixelFormat = libcamera::formats::RGB888;
-	else
-		configuration_->at(0).pixelFormat = libcamera::formats::YUV420;
+	else {
+		//configuration_->at(0).pixelFormat = libcamera::formats::YUV420;
+	}
 	if ((flags & FLAG_STILL_BUFFER_MASK) == FLAG_STILL_DOUBLE_BUFFER)
 		configuration_->at(0).bufferCount = 2;
 	else if ((flags & FLAG_STILL_BUFFER_MASK) == FLAG_STILL_TRIPLE_BUFFER)
@@ -358,8 +360,8 @@ void LibcameraApp::ConfigureStill(unsigned int flags)
 		configuration_->at(1).pixelFormat = mode_to_pixel_format(options_->mode);
 	}
 	configuration_->at(1).bufferCount = configuration_->at(0).bufferCount;
-
 	configureDenoise(options_->denoise == "auto" ? "cdn_hq" : options_->denoise);
+
 	setupCapture();
 
 	streams_["still"] = configuration_->at(0).stream();
@@ -392,7 +394,7 @@ void LibcameraApp::ConfigureVideo(unsigned int flags)
 
 	// Now we get to override any of the default settings from the options_->
 	StreamConfiguration &cfg = configuration_->at(0);
-	cfg.pixelFormat = libcamera::formats::YUV420;
+	//cfg.pixelFormat = libcamera::formats::YUV420;
 	cfg.bufferCount = 6; // 6 buffers is better than 4
 	if (options_->buffer_count > 0)
 		cfg.bufferCount = options_->buffer_count;
@@ -431,7 +433,7 @@ void LibcameraApp::ConfigureVideo(unsigned int flags)
 		if (lores_size.width > configuration_->at(0).size.width ||
 			lores_size.height > configuration_->at(0).size.height)
 			throw std::runtime_error("Low res image larger than video");
-		configuration_->at(lores_index).pixelFormat = libcamera::formats::YUV420;
+		//configuration_->at(lores_index).pixelFormat = libcamera::formats::YUV420;
 		configuration_->at(lores_index).size = lores_size;
 		configuration_->at(lores_index).bufferCount = configuration_->at(0).bufferCount;
 	}
@@ -959,8 +961,9 @@ void LibcameraApp::previewThread()
 				preview_cond_var_.wait(lock);
 		}
 
-		if (item.stream->configuration().pixelFormat != libcamera::formats::YUV420)
-			throw std::runtime_error("Preview windows only support YUV420");
+		if (item.stream->configuration().pixelFormat != libcamera::formats::YUV420 &&
+			item.stream->configuration().pixelFormat != libcamera::formats::NV12)
+			throw std::runtime_error("Preview windows only support YUV420 and NV12");
 
 		StreamInfo info = GetStreamInfo(item.stream);
 		FrameBuffer *buffer = item.completed_request->buffers[item.stream];
