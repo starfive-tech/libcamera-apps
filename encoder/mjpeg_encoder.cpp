@@ -45,6 +45,21 @@ void MjpegEncoder::EncodeBuffer(int fd, size_t size, void *mem, StreamInfo const
 	encode_cond_var_.notify_all();
 }
 
+void NV12ToYUV420(const uint8_t *mem, uint8_t *dst, const StreamInfo &info);
+static uint8_t *getYUV420Format(const uint8_t *mem, const StreamInfo &info)
+{
+	uint32_t width = info.width;
+	uint32_t height = info.height;
+	int32_t buf_size = width * height + ((height * width) >> 1);
+	uint8_t *buffer = new uint8_t[buf_size];
+
+	if(!buffer)
+		throw std::runtime_error("fail to apply memory.");
+	NV12ToYUV420(mem, buffer, info);
+
+	return buffer;
+}
+
 void MjpegEncoder::encodeJPEG(struct jpeg_compress_struct &cinfo, EncodeItem &item, uint8_t *&encoded_buffer,
 							  size_t &buffer_len)
 {
@@ -65,7 +80,8 @@ void MjpegEncoder::encodeJPEG(struct jpeg_compress_struct &cinfo, EncodeItem &it
 	jpeg_start_compress(&cinfo, TRUE);
 
 	int stride2 = item.info.stride / 2;
-	uint8_t *Y = (uint8_t *)item.mem;
+	uint8_t *yuv420 = getYUV420Format((uint8_t *)item.mem, item.info);
+	uint8_t *Y = yuv420;
 	uint8_t *U = (uint8_t *)Y + item.info.stride * item.info.height;
 	uint8_t *V = (uint8_t *)U + stride2 * (item.info.height / 2);
 	uint8_t *Y_max = U - item.info.stride;
@@ -89,6 +105,7 @@ void MjpegEncoder::encodeJPEG(struct jpeg_compress_struct &cinfo, EncodeItem &it
 
 	jpeg_finish_compress(&cinfo);
 	buffer_len = jpeg_mem_len;
+	delete[] yuv420;
 }
 
 void MjpegEncoder::encodeThread(int num)
