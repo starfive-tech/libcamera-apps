@@ -15,6 +15,8 @@
 using namespace std::placeholders;
 using libcamera::Stream;
 
+void NV12ToYUV420(const libcamera::Span<uint8_t> &mem, std::vector<libcamera::Span<uint8_t>> &yuv420, StreamInfo &info);
+
 class LibcameraJpegApp : public LibcameraApp
 {
 public:
@@ -61,29 +63,25 @@ static void event_loop(LibcameraJpegApp &app)
 			auto now = std::chrono::high_resolution_clock::now();
 			if (options->timeout && now - start_time > std::chrono::milliseconds(options->timeout))
 			{
+				Stream *stream = app.ViewfinderStream();
+				StreamInfo info = app.GetStreamInfo(stream);
+				CompletedRequestPtr &payload = std::get<CompletedRequestPtr>(msg.payload);
+				const std::vector<libcamera::Span<uint8_t>> mem = app.Mmap(payload->buffers[stream]);
+				std::vector<libcamera::Span<uint8_t>> yuv420;
+
+				NV12ToYUV420(mem[0], yuv420, info);
 				app.StopCamera();
 				app.Teardown();
-				app.ConfigureStill();
-				app.StartCamera();
+				
+				jpeg_save(yuv420, info, payload->metadata, options->output, app.CameraModel(), options);
+				delete[] yuv420[0].data();
+				return;
 			}
 			else
 			{
 				CompletedRequestPtr &completed_request = std::get<CompletedRequestPtr>(msg.payload);
 				app.ShowPreview(completed_request, app.ViewfinderStream());
 			}
-		}
-		// In still capture mode, save a jpeg and quit.
-		else if (app.StillStream())
-		{
-			app.StopCamera();
-			LOG(1, "Still capture image received");
-
-			Stream *stream = app.StillStream();
-			StreamInfo info = app.GetStreamInfo(stream);
-			CompletedRequestPtr &payload = std::get<CompletedRequestPtr>(msg.payload);
-			const std::vector<libcamera::Span<uint8_t>> mem = app.Mmap(payload->buffers[stream]);
-			jpeg_save(mem, info, payload->metadata, options->output, app.CameraModel(), options);
-			return;
 		}
 	}
 }

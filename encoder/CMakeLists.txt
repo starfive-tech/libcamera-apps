@@ -6,9 +6,12 @@ if (NOT DEFINED ENABLE_LIBAV)
     set(ENABLE_LIBAV 1)
 endif()
 
+find_library(SF_OMX_IL_LIBRARY sf-omx-il REQUIRED)
+include_directories(./include/khronos)
+
 set(LIBAV_PRESENT 0)
-set(SRC encoder.cpp null_encoder.cpp h264_encoder.cpp mjpeg_encoder.cpp)
-set(TARGET_LIBS images)
+set(SRC encoder.cpp null_encoder.cpp h264_encoder.cpp mjpeg_encoder.cpp h265_encoder.cpp yuv420_encoder.cpp)
+set(TARGET_LIBS images sf-omx-il)
 
 if (ENABLE_LIBAV)
     message(STATUS "Checking for libavcodec")

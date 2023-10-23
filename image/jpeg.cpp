@@ -447,6 +447,7 @@ static void create_exif_data(std::vector<libcamera::Span<uint8_t>> const &mem, S
 		exif = exif_data_new();
 		if (!exif)
 			throw std::runtime_error("failed to allocate EXIF data");
+
 		exif_data_set_byte_order(exif, exif_byte_order);
 
 		// First add some fixed EXIF tags.
