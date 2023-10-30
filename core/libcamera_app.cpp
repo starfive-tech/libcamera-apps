@@ -252,6 +252,10 @@ void LibcameraApp::ConfigureViewfinder()
 	//auto area = camera_->properties().get(properties::PixelArrayActiveAreas);
 	if (options_->viewfinder_width && options_->viewfinder_height)
 		size = Size(options_->viewfinder_width, options_->viewfinder_height);
+	else if (options_->width && options_->height)
+	{
+		size = Size(options_->width, options_->height);
+	}
 	//else if (area)
 	//{
 	//	// The idea here is that most sensors will have a 2x2 binned mode that
