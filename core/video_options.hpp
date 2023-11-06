@@ -23,17 +23,13 @@ struct VideoOptions : public Options
 		// clang-format off
 		options_.add_options()
 			("bitrate,b", value<uint32_t>(&bitrate)->default_value(0),
-			 "Set the video bitrate for encoding, in bits/second (h264 only)")
-			("profile", value<std::string>(&profile),
-			 "Set the encoding profile (h264 only)")
-			("level", value<std::string>(&level),
-			 "Set the encoding level (h264 only)")
+			 "Set the video bitrate for encoding, in bits/second (h265 only)")
 			("intra,g", value<unsigned int>(&intra)->default_value(0),
-			 "Set the intra frame period (h264 only)")
+			 "Set the intra frame period (h265 only)")
 			("inline", value<bool>(&inline_headers)->default_value(false)->implicit_value(true),
-			 "Force PPS/SPS header with every I frame (h264 only)")
-			("codec", value<std::string>(&codec)->default_value("h264"),
-			 "Set the codec to use, either h264, "
+			 "Force PPS/SPS header with every I frame (h265 only)")
+			("codec", value<std::string>(&codec)->default_value("h265"),
+			 "Set the codec to use, either h265, "
 #if LIBAV_PRESENT
 			  "libav, "
 #endif
@@ -123,14 +119,14 @@ struct VideoOptions : public Options
 			width = 640;
 		if (height == 0)
 			height = 480;
-		if (strcasecmp(codec.c_str(), "h264") == 0)
-			codec = "h264";
-		else if (strcasecmp(codec.c_str(), "libav") == 0)
+		if (strcasecmp(codec.c_str(), "libav") == 0)
 			codec = "libav";
 		else if (strcasecmp(codec.c_str(), "yuv420") == 0)
 			codec = "yuv420";
 		else if (strcasecmp(codec.c_str(), "mjpeg") == 0)
 			codec = "mjpeg";
+		else if (strcasecmp(codec.c_str(), "h265") == 0)
+			codec = "h265";
 		else
 			throw std::runtime_error("unrecognised codec " + codec);
 		if (strcasecmp(initial.c_str(), "pause") == 0)
