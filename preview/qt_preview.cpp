@@ -58,7 +58,7 @@ protected:
 class QtPreview : public Preview
 {
 public:
-	QtPreview(Options const *options) : Preview(options)
+	QtPreview(Options const *options) : Preview(options), frame_counter_(0)
 	{
 		window_width_ = options->preview_width;
 		window_height_ = options->preview_height;
@@ -83,6 +83,12 @@ public:
 	void SetInfoText(const std::string &text) override { main_window_->setWindowTitle(QString::fromStdString(text)); }
 	virtual void Show(int fd, libcamera::Span<uint8_t> span, StreamInfo const &info) override
 	{
+		if((frame_counter_++) & 1) {
+			// Return the buffer to the camera system.
+			done_callback_(fd);
+			return;
+		}
+		
 		// Quick and simple nearest-neighbour-ish resampling is used here.
 		// We further share U,V samples between adjacent output pixel pairs
 		// (even when downscaling) to speed up the conversion.
@@ -131,6 +137,7 @@ public:
 		// take a copy of each row used. This is a speedup provided memcpy() is vectorized.
 		tmp_stripe_.resize(2 * info.stride);
 		uint8_t const *Y_start = span.data();
+		uint8_t const *UV_start = Y_start + info.height * info.stride;
 		uint8_t *Y_row = &tmp_stripe_[0];
 		uint8_t *U_row = Y_row + info.stride;
 		uint8_t *V_row = U_row + (info.stride >> 1);
@@ -146,8 +153,11 @@ public:
 			unsigned x_pos = x_step >> 1;
 
 			memcpy(Y_row, Y_start + row * info.stride, info.stride);
-			memcpy(U_row, Y_start + ((4 * info.height + row) >> 1) * (info.stride >> 1), info.stride >> 1);
-			memcpy(V_row, Y_start + ((5 * info.height + row) >> 1) * (info.stride >> 1), info.stride >> 1);
+			//memcpy(U_row, Y_start + ((4 * info.height + row) >> 1) * (info.stride >> 1), info.stride >> 1);
+			//memcpy(V_row, Y_start + ((5 * info.height + row) >> 1) * (info.stride >> 1), info.stride >> 1);
+			uint8_t const *cur_uv = UV_start + (row >> 1) * info.width;
+			for(unsigned int uv_idx = 0; uv_idx < info.width >> 1; uv_idx++, cur_uv += 2)
+				U_row[uv_idx] = cur_uv[0], V_row[uv_idx] = cur_uv[1];
 
 			for (unsigned int x = 0; x < window_width_; x += 2)
 			{
@@ -183,7 +193,7 @@ public:
 	}
 	// Reset the preview window, clearing the current buffers and being ready to
 	// show new ones.
-	void Reset() override {}
+	void Reset() override {frame_counter_ = 0;}
 	// Check if preview window has been shut down.
 	bool Quit() override { return main_window_->quit; }
 	// There is no particular limit to image sizes, though large images will be very slow.
@@ -218,6 +228,8 @@ private:
 	std::mutex mutex_;
 	std::condition_variable cond_var_;
 	std::vector<uint8_t> tmp_stripe_;
+
+	unsigned int frame_counter_;
 };
 
 Preview *make_qt_preview(Options const *options)
