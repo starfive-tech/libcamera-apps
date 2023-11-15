@@ -1,0 +1,26 @@
+Source: libcamera-apps
+Section: libs
+Priority: optional
+Maintainer: Starfive Debian
+Rules-Requires-Root: no
+Build-Depends:
+               debhelper-compat (= 13),
+               cmake,
+               libboost-program-options-dev,
+               libexif-dev,
+               libjpeg-dev,
+               libtiff-dev,
+               libqt5x11extras5-dev,
+               libcamera-dev
+Standards-Version: 4.6.1
+Homepage: 
+#Vcs-Browser:
+#Vcs-Git:
+
+Package: libcamera-apps
+Section: libs
+Architecture: riscv64
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends},
+Description: libcamera-apps packages
