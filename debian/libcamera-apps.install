@@ -1,0 +1,8 @@
+obj-${DEB_HOST_GNU_TYPE}/core/libcamera_app.so*					usr/lib/${DEB_HOST_GNU_TYPE}/
+obj-${DEB_HOST_GNU_TYPE}/encoder/libencoders.so* 				usr/lib/${DEB_HOST_GNU_TYPE}/
+obj-${DEB_HOST_GNU_TYPE}/image/libimages.so*					usr/lib/${DEB_HOST_GNU_TYPE}/
+obj-${DEB_HOST_GNU_TYPE}/output/liboutputs.so*					usr/lib/${DEB_HOST_GNU_TYPE}/
+obj-${DEB_HOST_GNU_TYPE}/post_processing_stages/libpost_processing_stages.so*	usr/lib/${DEB_HOST_GNU_TYPE}/
+obj-${DEB_HOST_GNU_TYPE}/preview/libpreview.so* 				usr/lib/${DEB_HOST_GNU_TYPE}/
+obj-${DEB_HOST_GNU_TYPE}/libcamera-*						usr/bin/
+
