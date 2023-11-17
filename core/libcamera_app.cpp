@@ -349,10 +349,14 @@ void LibcameraApp::ConfigureStill(unsigned int flags)
 		configuration_->at(0).bufferCount = 3;
 	else if (options_->buffer_count > 0)
 		configuration_->at(0).bufferCount = options_->buffer_count;
-	if (options_->width)
+	if (options_->width) {
 		configuration_->at(0).size.width = options_->width;
-	if (options_->height)
+		configuration_->at(1).size.width = options_->width;
+	}
+	if (options_->height) {
 		configuration_->at(0).size.height = options_->height;
+		configuration_->at(1).size.height = options_->height;
+	}
 	configuration_->at(0).colorSpace = libcamera::ColorSpace::Sycc;
 	configuration_->transform = options_->transform;
 
