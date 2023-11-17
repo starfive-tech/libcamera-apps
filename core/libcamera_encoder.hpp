@@ -16,6 +16,7 @@
 typedef std::function<void(void *, size_t, int64_t, bool)> EncodeOutputReadyCallback;
 typedef std::function<void(libcamera::ControlList &)> MetadataReadyCallback;
 
+
 class LibcameraEncoder : public LibcameraApp
 {
 public:
