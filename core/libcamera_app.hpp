@@ -129,6 +129,11 @@ public:
 	static unsigned int GetVerbosity() { return verbosity; }
 
 protected:
+	std::shared_ptr<Camera> &getCamera() { return camera_; };
+	virtual void requestCompleteSpecial(Request *request) {};
+	virtual void stopSpecial() {};
+
+protected:
 	std::unique_ptr<Options> options_;
 
 private:

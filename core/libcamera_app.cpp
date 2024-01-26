@@ -655,6 +655,8 @@ void LibcameraApp::StopCamera()
 
 	controls_.clear(); // no need for mutex here
 
+	stopSpecial();
+
 	if (!options_->help)
 		LOG(2, "Camera stopped!");
 }
@@ -896,6 +898,11 @@ void LibcameraApp::requestComplete(Request *request)
 		if (camera_started_)
 			msg_queue_.Post(Msg(MsgType::Timeout));
 
+		return;
+	}
+
+	if(request->cookie()) {
+		requestCompleteSpecial(request);
 		return;
 	}
 
