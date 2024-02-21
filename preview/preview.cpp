@@ -13,44 +13,54 @@ Preview *make_null_preview(Options const *options);
 Preview *make_egl_preview(Options const *options);
 Preview *make_drm_preview(Options const *options);
 Preview *make_qt_preview(Options const *options);
+Preview *make_sdl_preview(Options const *options);
 
 Preview *make_preview(Options const *options)
 {
 	if (options->nopreview)
 		return make_null_preview(options);
 #if QT_PRESENT
-	else
+	else if (options->qt_preview)
 	{
 		Preview *p = make_qt_preview(options);
 		if (p)
 			LOG(1, "Made QT preview window");
 		return p;
 	}
-#else
-	try
-	{
-		throw std::runtime_error("qt5 libraries unavailable.");
-	}
-	catch(std::exception const &e)
+#endif
+	else
 	{
 		try
 		{
-#if LIBDRM_PRESENT
-			Preview *p = make_drm_preview(options);
+#if LIBSDL_PRESENT
+			Preview *p = make_sdl_preview(options);
 			if (p)
-				LOG(1, "Made DRM preview window");
+				LOG(1, "Made SDL preview window");
 			return p;
 #else
-			throw std::runtime_error("drm libraries unavailable.");
+			throw std::runtime_error("sdl libraries unavailable.");
 #endif
 		}
 		catch (std::exception const &e)
 		{
-			LOG(1, "Preview window unavailable");
-			return make_null_preview(options);
+			try
+			{
+#if LIBDRM_PRESENT
+				Preview *p = make_drm_preview(options);
+				if (p)
+					LOG(1, "Made DRM preview window");
+				return p;
+#else
+				throw std::runtime_error("drm libraries unavailable.");
+#endif
+			}
+			catch (std::exception const &e)
+			{
+				LOG(1, "Preview window unavailable");
+				return make_null_preview(options);
+			}
 		}
 	}
-#endif
 
 	return nullptr; // prevents compiler warning in debug builds
 }
