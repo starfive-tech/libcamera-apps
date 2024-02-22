@@ -1,15 +1,12 @@
 /* SPDX-License-Identifier: BSD-2-Clause */
 /*
- * Copyright (C) 2020, Raspberry Pi (Trading) Ltd.
+ * Copyright (C) 2023, Starfive Technology Co., Ltd.
  *
- * egl_preview.cpp - X/EGL-based preview window.
+ * sdl_preview.cpp - SDL preview window
  */
 
 #include <map>
 #include <string>
-
-// Include libcamera stuff before X11, as X11 #defines both Status and None
-// which upsets the libcamera headers.
 
 #include "core/options.hpp"
 
