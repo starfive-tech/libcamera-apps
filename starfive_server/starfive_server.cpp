@@ -77,6 +77,7 @@ void StarfiveServer::getISPParams(STCOMDDATA *pcomddata)
 
 		if(!pc->isDynamic() && pc->initDownParam_) {
 			pc->toUpType(pc->getDownParam(), (void *)((uint8_t *)pcomddata + sizeof(STCOMD)));
+			pcomddata->stComd.u32Size = pc->upTypeSize();
 			return;
 		}
 
