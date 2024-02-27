@@ -23,9 +23,6 @@
 
 #include "preview.hpp"
 
-#define DEFAULT_WINDOW_WIDTH				800
-#define DEFAULT_WINDOW_HEIGHT				600
-
 class MyMainWindow : public QMainWindow
 {
 public:
@@ -62,7 +59,6 @@ public:
 	}
 
 	QSize size;
-	QRect drawRect;
 
 	struct ImageBuffer {
 		QImage image;
@@ -85,11 +81,8 @@ protected:
 			buffer = &buffers_[getAvailableBuffer(true)];
 			buffer->busy = true;
 			}
-			
-			if(drawRect.isNull())
-				painter.drawImage(rect(), buffer->image, buffer->image.rect());
-			else
-				painter.drawImage(drawRect, buffer->image, buffer->image.rect());
+
+			painter.drawImage(rect(), buffer->image, buffer->image.rect());
 
 			{
 			std::lock_guard<std::mutex> lock(buffers_available_mutex_);
@@ -111,8 +104,8 @@ public:
 			throw std::runtime_error("QtPreview: expect even dimensions");
 		// This preview window is expensive, so make it small by default.
 		if (window_width_ == 0 || window_height_ == 0)
-			window_width_ = DEFAULT_WINDOW_WIDTH, window_height_ = DEFAULT_WINDOW_HEIGHT;
-			//window_width_ = 512, window_height_ = 384;
+			// window_width_ = DEFAULT_WINDOW_WIDTH, window_height_ = DEFAULT_WINDOW_HEIGHT;
+			window_width_ = 512, window_height_ = 384;
 		
 		frameCounter_ = 0;
 		// As a hint, reserve twice the binned width for our widest current camera (V3)
@@ -131,9 +124,6 @@ public:
 	void SetInfoText(const std::string &text) override { main_window_->setWindowTitle(QString::fromStdString(text)); }
 	virtual void Show(int fd, libcamera::Span<uint8_t> span, StreamInfo const &info) override
 	{
-		if(pane_->drawRect.isNull())
-			initDrawRect(info);
-
 		MyWidget::ImageBuffer *buffer = nullptr;
 		uint32_t availabelBufIdx = (uint32_t)-1;
 		{
@@ -254,23 +244,6 @@ public:
 	virtual void MaxImageSize(unsigned int &w, unsigned int &h) const override { w = h = 0; }
 
 private:
-	void initDrawRect(StreamInfo const &info)
-	{
-		if((int64_t)window_height_ * info.width <= (int64_t)window_width_ * info.height) {
-			int w = (int)(((double)info.width * window_height_) / (double)info.height);
-			pane_->drawRect.setWidth(w);
-			pane_->drawRect.setHeight(window_height_);
-			pane_->drawRect.setX((window_width_ - w) >> 1);
-			pane_->drawRect.setY(0);
-		} else {
-			int h = (int)(((double)info.height * window_width_) / (double)info.width);
-			pane_->drawRect.setWidth(window_width_);
-			pane_->drawRect.setHeight(h);
-			pane_->drawRect.setX(0);
-			pane_->drawRect.setY((window_height_ - h) >> 1);
-		}
-	}
-
 	void threadFunc(Options const *options)
 	{
 		// This acts as Qt's event loop. Really Qt prefers to own the application's event loop
@@ -286,8 +259,6 @@ private:
 		main_window.setCentralWidget(&pane);
 		// Need to get the window border sizes (it seems to be unreasonably difficult...)
 		main_window.move(options->preview_x + 2, options->preview_y + 28);
-		main_window.setWindowFlags(main_window.windowFlags() & ~Qt::WindowMaximizeButtonHint);
-		main_window.setFixedSize(window_width_, window_height_);
 		main_window.show();
 		pane_ = &pane;
 		cond_var_.notify_one();
