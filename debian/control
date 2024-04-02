@@ -12,7 +12,8 @@ Build-Depends:
                libtiff-dev,
                libqt5x11extras5-dev,
                libcamera-dev,
-               omx-il
+               omx-il,
+               libsdl2-dev 
 Standards-Version: 4.6.1
 Homepage: 
 #Vcs-Browser:
